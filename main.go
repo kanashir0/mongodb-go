@@ -8,12 +8,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"gopkg.in/gookit/color.v1"
+	color "gopkg.in/gookit/color.v1"
 )
 
 var collection *mongo.Collection
@@ -36,6 +36,25 @@ func getAll() ([]*Task, error) {
 	// bson.D{{}} matches all documents in the collection
 	filter := bson.D{{}}
 	return filterTasks(filter)
+}
+
+func getPending() ([]*Task, error) {
+	filter := bson.D{
+		primitive.E{key: "completed", Value: false}
+	}
+
+	return filterTasks(filter)
+}
+
+func completeTask(text string) error {
+	filter := bson.D{primitive.E{Key: "text", Value: text}}
+
+	update := bson.D{primitive.E{Key: "$set", Value: bson.D{
+		primitive.E{Key: "completed", Value: true},
+	}}}
+
+	t := &Task{}
+	return collection.FindOneAndUpdate(ctx, filter, update).Decode(t)
 }
 
 func filterTasks(filter interface{}) ([]*Task, error) {
@@ -139,6 +158,15 @@ func main() {
 
 					printTasks(tasks)
 					return nil
+				},
+			},
+			{
+				Name:    "done",
+				Aliases: []string{"d"},
+				Usage:   "complete a task on the list",
+				Action: func(c *cli.Context) error {
+					text := c.Args().First()
+					return completeTask(text)
 				},
 			},
 		},
