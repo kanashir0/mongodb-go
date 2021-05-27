@@ -40,7 +40,7 @@ func getAll() ([]*Task, error) {
 
 func getPending() ([]*Task, error) {
 	filter := bson.D{
-		primitive.E{key: "completed", Value: false}
+		primitive.E{Key: "completed", Value: false},
 	}
 
 	return filterTasks(filter)
@@ -119,6 +119,20 @@ func main() {
 	app := &cli.App{
 		Name:  "tasker",
 		Usage: "A simple CLI program to manage your tasks",
+		Action: func(c *cli.Context) error {
+			tasks, err := getPending()
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					fmt.Print("Nothing to see here.\nRun `add 'task'` to add a task")
+					return nil
+				}
+
+				return err
+			}
+
+			printTasks(tasks)
+			return nil
+		},
 		Commands: []*cli.Command{
 			{
 				Name:    "add",
