@@ -10,3 +10,5 @@ In this project we'll use **docker-compose** to host our MongoDB instance. So ma
 cd mongodb-go && mkdir database 
 docker-compose up -d
 ```
+
+This tasker app was initially created based on this article from Digital Ocean: [How To Use Go with MongoDB Using the MongoDB Go Driver](https://www.digitalocean.com/community/tutorials/how-to-use-go-with-mongodb-using-the-mongodb-go-driver)
