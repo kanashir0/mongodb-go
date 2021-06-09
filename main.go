@@ -46,6 +46,29 @@ func getPending() ([]*Task, error) {
 	return filterTasks(filter)
 }
 
+func getFinished() ([]*Task, error) {
+	filter := bson.D{
+		primitive.E{Key: "completed", Value: true},
+	}
+
+	return filterTasks(filter)
+}
+
+func deleteTask(text string) error {
+	filter := bson.D{primitive.E{Key: "text", Value: text}}
+
+	res, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if res.DeletedCount == 0 {
+		return errors.New("No tasks were deleted")
+	}
+
+	return nil
+}
+
 func completeTask(text string) error {
 	filter := bson.D{primitive.E{Key: "text", Value: text}}
 
@@ -181,6 +204,38 @@ func main() {
 				Action: func(c *cli.Context) error {
 					text := c.Args().First()
 					return completeTask(text)
+				},
+			},
+			{
+				Name:    "finished",
+				Aliases: []string{"f"},
+				Usage:   "list completed tasks",
+				Action: func(c *cli.Context) error {
+					tasks, err := getFinished()
+					if err != nil {
+						if err == mongo.ErrNoDocuments {
+							fmt.Print("Nothing to see here.\nRun `done 'task'` to complete a task")
+							return nil
+						}
+
+						return err
+					}
+
+					printTasks(tasks)
+					return nil
+				},
+			},
+			{
+				Name:  "rm",
+				Usage: "deletes a task on the list",
+				Action: func(c *cli.Context) error {
+					text := c.Args().First()
+					err := deleteTask(text)
+					if err != nil {
+						return err
+					}
+
+					return nil
 				},
 			},
 		},
