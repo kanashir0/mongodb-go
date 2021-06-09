@@ -16,3 +16,6 @@
 
 # database folder
 database/
+
+# Mac files
+.DS_Store
